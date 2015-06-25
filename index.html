@@ -1,25 +1,34 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html>
   <head>
-    <meta charset="UTF-8">
-    <title>Xke-kafka by mblanc</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-  </head>
-  <body>
-    <section class="page-header">
-      <h1 class="project-name">Xke-kafka</h1>
-      <h2 class="project-tagline"></h2>
-      <a href="https://github.com/mblanc/xke-kafka" class="btn">View on GitHub</a>
-      <a href="https://github.com/mblanc/xke-kafka/zipball/master" class="btn">Download .zip</a>
-      <a href="https://github.com/mblanc/xke-kafka/tarball/master" class="btn">Download .tar.gz</a>
-    </section>
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
 
-    <section class="main-content">
-      <h1>
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Xke-kafka by mblanc</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Xke-kafka</h1>
+        <h2></h2>
+        <a href="https://github.com/mblanc/xke-kafka" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
 <a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h1>
 
 <h2>
@@ -201,16 +210,14 @@ Lancer le pour découvrir ses options : </p>
 
 <ul>
 <li>créer un client Zookeeper</li>
-<li>
-<p>Chercher dans kafka.admin.AdminUtils la bonne méthode</p>
-
-<p>// Réponse
-val topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient)</p>
-
-<h3>
-<a id="se-connecter-à-une-partition" class="anchor" href="#se-connecter-%C3%A0-une-partition" aria-hidden="true"><span class="octicon octicon-link"></span></a>Se connecter à une partition</h3>
-</li>
+<li>Chercher dans kafka.admin.AdminUtils la bonne méthode</li>
 </ul>
+
+<pre><code>    // Réponse
+    val topicMetadata = AdminUtils.fetchTopicMetadataFromZk(topic, zkClient)
+</code></pre>
+
+<p>### Se connecter à une partition</p>
 
 <p>Il existe à un instant au plus 1 noeud Kafka leader pour une partition d'un topic donné. 
 Pour faire simple, nous allons nous connecter à toutes les partitions du topic en une fois. Il faudra donc faire une boucle sur la liste des partitions que vous avez récupérer précédemment.</p>
@@ -219,17 +226,16 @@ Pour faire simple, nous allons nous connecter à toutes les partitions du topic 
 
 <ul>
 <li>fouiller dans la réponse précédente pour trouver chaque leader de chaque partition. </li>
-<li>
-<p>se connecter au broker en instantiant un kafka.consumer.SimpleConsumer par partition.</p>
-
-<p>// Réponse
-val partitionsBroker: Map[Int, Option[Broker]] = topicMetadata.partitionsMetadata.groupBy(<em>.partitionId).toMap.mapValues(</em>.head.leader)</p>
-
-<p>val partitionsConsumer: Map[Int, Option[SimpleConsumer]] = partitionsBroker.mapValues{
-    optionalBroker =&gt; optionalBroker.map{leader =&gt; new SimpleConsumer(leader.host, leader.port, 10000, 64000, "aCLientId")}
-}</p>
-</li>
+<li>se connecter au broker en instantiant un kafka.consumer.SimpleConsumer par partition.</li>
 </ul>
+
+<pre><code>    // Réponse
+    val partitionsBroker: Map[Int, Option[Broker]] = topicMetadata.partitionsMetadata.groupBy(_.partitionId).toMap.mapValues(_.head.leader)
+
+    val partitionsConsumer: Map[Int, Option[SimpleConsumer]] = partitionsBroker.mapValues{
+        optionalBroker =&gt; optionalBroker.map{leader =&gt; new SimpleConsumer(leader.host, leader.port, 10000, 64000, "aCLientId")}
+    }
+</code></pre>
 
 <h3>
 <a id="trouver-loffset-de-démarrage-de-consommation" class="anchor" href="#trouver-loffset-de-d%C3%A9marrage-de-consommation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Trouver l'offset de démarrage de consommation</h3>
@@ -240,13 +246,12 @@ Pour chaque requête de données à Kafka, on lui précise le nombre de messages
 <p>Il faut: </p>
 
 <ul>
-<li>
-<p>trouver sur SimpleConsumer une méthode nous permettant de trouver l'identifiant du premier offset connu de chaque partition.</p>
-
-<p>//Réponse
-consumer.earliestOrLatestOffset(topicAndPartition, OffsetRequest.EarliestTime, Request.OrdinaryConsumerId)  </p>
-</li>
+<li>trouver sur SimpleConsumer une méthode nous permettant de trouver l'identifiant du premier offset connu de chaque partition.</li>
 </ul>
+
+<pre><code>    //Réponse
+    consumer.earliestOrLatestOffset(topicAndPartition, OffsetRequest.EarliestTime, Request.OrdinaryConsumerId)  
+</code></pre>
 
 <p>NB: on pourrait aussi lancer le consommateur depuis la fin courante de la file. Ainsi, le consommateur ne recevrait de messages que lorsqu'un nouveau serait posté.</p>
 
@@ -260,18 +265,17 @@ consumer.earliestOrLatestOffset(topicAndPartition, OffsetRequest.EarliestTime, R
 <ul>
 <li>créer une FetchRequest grâce au FetchRequestBuilder. </li>
 <li>l'exécuter avec le SimpleConsumer</li>
-<li>
-<p>itérer sur l'Iterator de MessageSet </p>
-
-<p>//Réponse
-val request = new FetchRequestBuilder()
-    .clientId(groupId)
-    .addFetch(topic, partitionId, nextOffsetToFetch, maxMessageSize * count)
-    .maxWait(fetchTimeout)
-    .build()
-val fetchReply = consumer.fetch(request)</p>
-</li>
+<li>itérer sur l'Iterator de MessageSet </li>
 </ul>
+
+<pre><code>    //Réponse
+    val request = new FetchRequestBuilder()
+        .clientId(groupId)
+        .addFetch(topic, partitionId, nextOffsetToFetch, maxMessageSize * count)
+        .maxWait(fetchTimeout)
+        .build()
+    val fetchReply = consumer.fetch(request)
+</code></pre>
 
 <p>NB: il est possible que Kafka vous envoie des messages un peu avant l'offset qui est demandé (pour des raisons d'optimisation). Si le côté transactionnel est important pour vous, pensez à filtrer sur les offsets des messages reçus.   </p>
 
@@ -296,28 +300,32 @@ channel.connect()</li>
 channel.send(new ConsumerMetadataRequest(groupId))
 val reply = ConsumerMetadataResponse.readFrom(channel.receive().buffer)</li>
 <li>S'il existe un coordinateur, il faut s'y connecter</li>
-<li>Faire un commit 
-val request = OffsetCommitRequest(
-    groupId,
-Map(topicAndPartition -&gt; OffsetAndMetadata(offset)),
-versionId = 1
-)
-println(s"Committing offset &lt;$offset&gt; to partition &lt;$partition&gt;:&lt;$groupId&gt;")
-val reply = Try {
-    channel.send(request)
-OffsetCommitResponse.readFrom(channel.receive().buffer)
-}
-reply.map(<em>.commitStatus(topicAndPartition)).filter(</em> == NoError)</li>
+<li>Faire un commit </li>
 </ul>
+
+<pre><code>    val request = OffsetCommitRequest(
+        groupId,
+    Map(topicAndPartition -&gt; OffsetAndMetadata(offset)),
+    versionId = 1
+    )
+    println(s"Committing offset &lt;$offset&gt; to partition &lt;$partition&gt;:&lt;$groupId&gt;")
+    val reply = Try {
+        channel.send(request)
+    OffsetCommitResponse.readFrom(channel.receive().buffer)
+    }
+    reply.map(_.commitStatus(topicAndPartition)).filter(_ == NoError)
+</code></pre>
 
 <p>Pour lire cette valeur et ainsi recommencer à lire depuis le dernier offset connu, il faut :</p>
 
 <ul>
-<li>sur le channel du coordinateur, faire une requête OffsetFetchRequest
-val request = OffsetFetchRequest(groupId, List(topicAndPartition))
-channel.send(request)
-OffsetFetchResponse.readFrom(channel.receive().buffer)</li>
+<li>sur le channel du coordinateur, faire une requête OffsetFetchRequest</li>
 </ul>
+
+<pre><code>val request = OffsetFetchRequest(groupId, List(topicAndPartition))
+channel.send(request)
+OffsetFetchResponse.readFrom(channel.receive().buffer)
+</code></pre>
 
 <p>Vous pouvez ainsi récupérer le dernier offset connu, à la prochaine requête, vous pourez utiliser cette valuer.</p>
 
@@ -331,16 +339,25 @@ OffsetFetchResponse.readFrom(channel.receive().buffer)</li>
 <li>Réessayer plusieurs fois certaines action quand le cluster n'est pas stable (en phase de transition)</li>
 <li>Il se peut que'offset commité n'existe plus dans Kafka, il faut ainsi s'assurer qu'il existe supérieur au premier offset connu...</li>
 </ul>
+        </section>
 
-      <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.com/mblanc/xke-kafka">Xke-kafka</a> is maintained by <a href="https://github.com/mblanc">mblanc</a>.</span>
+        <aside id="sidebar">
+          <a href="https://github.com/mblanc/xke-kafka/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/mblanc/xke-kafka/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
 
-        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
-      </footer>
+          <p class="repo-owner"><a href="https://github.com/mblanc/xke-kafka"></a> is maintained by <a href="https://github.com/mblanc">mblanc</a>.</p>
 
-    </section>
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
 
   
   </body>
 </html>
-
